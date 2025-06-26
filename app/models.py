@@ -23,7 +23,7 @@ class Emp_login(db.Model, UserMixin):
     name = db.Column(db.String(150), nullable=False)
     password = db.Column(db.String(150))
     emp_id = db.Column(db.Integer)
-    branch=db.Column(db.String(150),default='KKL')  # DR, FT, KKL 
+    branch=db.Column(db.String(150),default='KKL')  # DR, FT, KKL
     phoneNumber=db.Column(db.Integer)   #newly added
     role =db.Column(db.String(150), nullable=False)
     late_balance = db.Column(db.Integer, default=20)
@@ -33,8 +33,8 @@ class Emp_login(db.Model, UserMixin):
     shift=db.Column(db.String(150))
     attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
     freezed_account =db.Column(db.Boolean(150),default=False)
-    
-    
+
+
 class Attendance(db.Model,UserMixin):
     id=db.Column(db.Integer,primary_key=True)
     date = db.Column(db.DateTime(timezone=True), default=current_time)
@@ -53,8 +53,8 @@ class Attendance(db.Model,UserMixin):
     TotalDuration=db.Column(db.String(150))
     lateBy=db.Column(db.Time(timezone=True))
     earlyGoingBy=db.Column(db.Time(timezone=True))
-    # punchRecords=db.Column(db.String(150))	
-    
+    # punchRecords=db.Column(db.String(150))
+
 
 
 class LoginEmp(db.Model, UserMixin):
@@ -63,16 +63,16 @@ class LoginEmp(db.Model, UserMixin):
     email=db.Column(db.String(150),unique=True)
     password = db.Column(db.String(150))
     date = db.Column(db.DateTime(timezone=True), default=current_time)
-    
-    
+
+
 class Shift_time(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     shiftIntime = db.Column(db.Time(timezone=True))
     shift_Outtime = db.Column(db.Time(timezone=True))
     shiftType = db.Column(db.String(150))
 
-    
-    
+
+
 class Backup(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.DateTime(timezone=True), default=current_time)
@@ -80,24 +80,24 @@ class Backup(db.Model):
     name = db.Column(db.String(150))
     password = db.Column(db.String(150))
     emp_id = db.Column(db.Integer)
-    branch=db.Column(db.String(150))  
-    phoneNumber=db.Column(db.Integer)   
+    branch=db.Column(db.String(150))
+    phoneNumber=db.Column(db.Integer)
     role =db.Column(db.String(150))
     address = db.Column(db.String(150))
     gender = db.Column(db.String(150))
     shift=db.Column(db.String(150))
     attendances = db.Column(db.String(150))
-    worked=db.Column(db.Integer) 
-    
-    
-    
-    
-    
+    worked=db.Column(db.Integer)
+
+
+
+
+
 class NewShift(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name_date_day = db.Column(db.String(255))
     filename=db.Column(db.String(255))
-    
+
     # Define columns for days 1 through 31
     for day_num in range(1, 32):
         locals()[f"day_{day_num}"] = db.Column(db.String(255))
@@ -106,7 +106,7 @@ class NewShift(db.Model):
     wednesday = db.Column(db.String(255))
     thursday = db.Column(db.String(255))
     friday = db.Column(db.String(255))
-    
+
 class notifications(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     reason = db.Column(db.String(255))
@@ -117,7 +117,7 @@ class notifications(db.Model):
     from_time = db.Column(db.String(150), nullable=False)
     to_time = db.Column(db.String(150), nullable=False)
     req_id = db.Column(db.Integer)
-    
+
 # Late Model (Example)
 class late(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
@@ -132,7 +132,7 @@ class late(db.Model, UserMixin):
     hr_approval = db.Column(db.String(150), default='Pending')
     date = db.Column(db.DateTime(timezone=True), default=current_time)
 # Leave Model (Example)
-    
+
 class leave(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     emp_id = db.Column(db.Integer)
@@ -181,7 +181,3 @@ class call_duty(db.Model):
     date= db.Column(db.DateTime(timezone=True))
     inTime= db.Column(db.DateTime(timezone=True))
     outTime= db.Column(db.DateTime(timezone=True))
-
-# class Start(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     isActive=db.Column(db.Boolean(150),default=False)

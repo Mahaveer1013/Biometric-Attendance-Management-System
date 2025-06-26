@@ -19,7 +19,7 @@ def login():
     admin = Emp_login.query.filter_by(email='vsabarinathan1611@gmail.com').first()
     if admin:
         if request.method == 'POST':
-            
+
             email = request.form.get('email')
             password = request.form.get('password')
             # session.clear()
@@ -45,7 +45,7 @@ def login():
                         session['late_balance']=dbemail.late_balance
                         return redirect(url_for('views.user_dashboard'))
                         #return redirect(url_for('views.emp_login'))
-                    
+
                 else:
                     flash("Incorrect Password", category='error')
             else:
@@ -65,29 +65,10 @@ def login():
         print('Created Admin!')
 
     return render_template('login.html')
-# @auth.route('/login', methods=['POST', 'GET'])
-# def admin_login():
-#     if request.method == 'POST':
-#         emp_id = request.form.get('emp_id')
-#         password = request.form.get('password')
-#         print("emp_id", emp_id)
-#         print("pwd:", password)
-
-#         dbemp = Login_admin.query.filter_by(emp_id=emp_id).first()
-#         if dbemp:
-#             if check_password_hash(dbemp.password, password):
-#                 login_user(dbemp, remember=True)
-#                 return redirect(url_for('views.dashboard'))
-#             else:
-#                 flash("Incorrect Password", category='error')
-#         else:
-#             flash("Incorrect Employee ID", category='error')
-
-#     return render_template('emp_login.html')
 
 @auth.route('/login', methods=['POST', 'GET'])
 def admin_login():
-    
+
     print("session cleared")
     return render_template("login.html")
 
@@ -98,12 +79,12 @@ def logout():
 
 @auth.route('/addemp', methods=['POST', 'GET'])
 @login_required
-def attendance():    
+def attendance():
     try:
 
             file_path = os.path.join(app.config['EXCEL_FOLDER'], 'employee_data.xlsx')  # Use correct case 'EXCEL_FOLDER'
             addemployee(file_path)  # Call the data processing function
-       
+
 
     except Exception as e:
         print("Error occurred:", e)
@@ -126,7 +107,7 @@ def signup():
         existing_id = Emp_login.query.filter_by(id=emp_id).first()
         if existing_user:
             flash('Email already exists. Please choose a different email.')
-            
+
         elif existing_id:
             flash('Emp id already exists. Please choose a different email.')
         else:
@@ -140,4 +121,3 @@ def signup():
 
     # Render the signup form for GET requests
     return render_template('signup.html')
-

@@ -28,4 +28,3 @@ openpyxl
 twilio
 celery==5.3.6
 apscheduler
-flask_mysqldb

@@ -12,7 +12,7 @@ import sched
 from twilio.rest import Client
 import schedule
 import time
-from sqlalchemy import text 
+from sqlalchemy import text
 from email.mime.text import MIMEText
 from twilio.base.exceptions import TwilioRestException
 from sqlalchemy import func
@@ -27,6 +27,8 @@ from sqlalchemy.ext.automap import automap_base
 from flask import current_app
 import sqlite3
 import logging
+from dotenv import load_dotenv
+load_dotenv()
 Base = automap_base()
 Base.prepare(mysql_engine, reflect=True)
 MySQLAttendance = Base.classes.attendance
@@ -36,15 +38,14 @@ SessionMySQL = sessionmaker(bind=mysql_engine)
 logging.getLogger('sqlalchemy.dialects.mysql').setLevel(logging.WARNING)
 logging.getLogger('sqlalchemy.engine').setLevel(logging.WARNING)
 
-
 from sqlalchemy.orm import Session
 scheduler = sched.scheduler(time.time, time.sleep)
 
 
 def send_mail(email, subject, body):
-    sender_email = "kklimited1013@gmail.com"
+    sender_email = os.getenv("EMAIL")
     receiver_email = email
-    password = "hmupzeoeftrbzmkl"  # Use an App Password or enable Less Secure Apps
+    password = os.getenv("EMAIL_PASS")  # Use an App Password or enable Less Secure Apps
 
     # Create the email message
     message = MIMEText(body)
@@ -92,26 +93,26 @@ def send_sms(numbers_to_message, message_body):
             print(f"Twilio error: {e}")
 
 def validate_and_format_phone_number(phone_number):
-    
+
     phone_number=str(phone_number)
     if not phone_number.startswith('+'):
         phone_number = '+91' + phone_number
         print("phone_number:",phone_number)
 
     return phone_number
-    
+
 def update_or_add_shift(shift_type, in_time, out_time):
     existing_shift = session_sqlite.query(Shift_time).filter_by(shiftType=shift_type).first()
     print("update_or_add_shift")
-    
-  
+
+
     if existing_shift:
         # Update existing shift
         existing_shift.shiftIntime = in_time
         existing_shift.shift_Outtime = out_time
         print("Shift updated")
         return session_sqlite.commit()
-       
+
     else:
         # Add new shift
         new_shift = Shift_time(
@@ -120,11 +121,11 @@ def update_or_add_shift(shift_type, in_time, out_time):
             shiftType=shift_type,
         )
         session_sqlite.add(new_shift)
-        
+
 
         print("New shift added")
         return session_sqlite.commit()
-    
+
 def read_weekoff(file_path):
     print("Prestn",file_path)
     if os.path.exists(file_path):
@@ -135,10 +136,10 @@ def read_weekoff(file_path):
             df = None
             if file_path.lower().endswith('.xlsx'):
                 df = pd.read_excel(file_path, sheet_name, engine='openpyxl')
-              
+
             elif file_path.lower().endswith('.xls'):
                 df = pd.read_excel(file_path, sheet_name, engine='xlrd')
-              
+
             else:
                 print("Unsupported file format")
                 return  # Handle unsupported format
@@ -175,261 +176,32 @@ def process_excel_data(file_path):
 
                 in_time = datetime.strptime(in_time_str, '%H:%M:%S').time()
                 out_time = datetime.strptime(out_time_str, '%H:%M:%S').time()
-            
+
                 print("Processing: ", shift_type)
 
-                
+
 
                 update_or_add_shift(shift_type, in_time, out_time)
 
-# def calculate_Attendance(chunk_size=100):
-#     with app.app_context():
-#         total_employees = session_sqlite.query(Emp_login).count()
-#         total_chunks = (total_employees + chunk_size - 1) // chunk_size
-
-#         for chunk_index in range(total_chunks):
-#             employees = session_sqlite.query(Emp_login).offset(chunk_index * chunk_size).limit(chunk_size).all()
-#             for employee in employees:
-#                 attendance_records = session_sqlite.query(Attendance).filter_by(emp_id=employee.id).all()
-
-#                 for attendance in attendance_records:
-#                     # print(attendance.employee.shift)
-#                     shift = session_sqlite.query(Shift_time).filter_by(shiftType=attendance.employee.shift).first()
-#                     if attendance.inTime=='-':
-#                         inTime='-'
-#                     else:
-#                         attend_date=attendance.date.date()
-
-#                         inTime = datetime.combine(attend_date, (datetime.strptime(attendance.inTime, '%d-%m-%Y %H:%M').time()))
-#                         # inTime = datetime.strptime(attendance.date + ' ' + attendance.inTime, '%Y-%m-%d %H:%M:%S')
-
-#                     if attendance.outTime =='-':
-#                         outTime='-'
-#                     else:
-#                         attend_date=attendance.date.date()
-#                         outTime = datetime.combine(attend_date, (datetime.strptime(attendance.outTime, '%d-%m-%Y %H:%M').time()))
-
-                    
-#                     # shiftIntime = datetime.strptime(shift.shiftIntime,'%H:%M:%S').time()
-#                     # shiftOuttime = datetime.strptime(shift.shift_Outtime,'%H:%M:%S').time()
-#                     # shiftIntime = datetime.combine(datetime.today(), shiftIntime)
-#                     # shiftOuttime = datetime.combine(datetime.today(), shiftOuttime)
-
-                    
-#                     if inTime!='-':
-#                         lateBy = calculate_time_difference(shift.shiftIntime, inTime)
-#                         # late = calculate_time_difference('22:00', '06:01')  # sin , in
-#                         # late_time = datetime.strptime(lateBy, '%H:%M:%S').time()
-#                         if lateBy>time(8, 0):
-#                             lateBy=None
-#                         print(lateBy)
-#                     else:
-#                         attendance.lateBy=None
-                    
-#                     if inTime!=None:
-#                         lateBy_str=attendance.lateBy
-#                         print(lateBy)
-#                         hours, minutes,seconds = map(int, lateBy_str.split(':'))
-#                         # print(hours * 60 + minutes >10)
-#                         if (hours * 60 + minutes >10):
-#                             attendance.attendance='Half day'
-
-#                     if outTime != None:
-
-#                         earlyGoingBy = calculate_time_difference(outTime , shift.shiftOuttime)  # out , sout
-#                         if earlyGoingBy>time(8, 0, 0):
-#                             earlyGoingBy=None
-
-#                         time_worked = calculate_time_difference(inTime, outTime)
-#                         if "-" in str(time_worked):
-#                             attendance.TotalDuration = None
-#                         else:
-#                             attendance.TotalDuration = time_worked
-
-#                         overtime_hours = calculate_time_difference(shift.shiftOuttime, outTime)
-#                         attendance.overtime = overtime_hours
-#                     else:
-#                         # out_time = datetime.now().strftime("%H:%M")
-#                         # if out_time != "00:00": 
-#                             # earlyGoingBy = calculate_time_difference(out_time, shiftOuttime)
-#                         attendance.overtime = None
-#                         # attendance.earlyGoingBy = earlyGoingBy
-#                         attendance.earlyGoingBy = None
-#                         # attendance.TotalDuration = calculate_time_difference_with_dates(inTime, out_time)
-#                         attendance.TotalDuration = None
-                
-#         return session_sqlite.commit()
-
-# def calculate_time_difference(time1, time2):
-
-#     # Convert time strings to datetime objects (without seconds)
-#     time_format = '%H:%M:%S'
-
-#     # seconds1 = time1.hour * 3600 + time1.minute * 60 + time1.second
-#     # seconds2 = time2.hour * 3600 + time2.minute * 60 + time2.second
-#     # difference_seconds = abs(seconds2 - seconds1)
-#     time1 = datetime.strptime(str(time1), time_format).time()
-#     time2 = datetime.strptime(str(time2), time_format).time()
-#     seconds1 = time1.hour * 3600 + time1.minute * 60
-#     seconds2 = time2.hour * 3600 + time2.minute * 60
-
-#     # Calculate the difference in seconds
-#     difference_seconds = abs(seconds2 - seconds1)
-
-#     # Convert seconds to hours and minutes
-#     total_minutes = difference_seconds // 60
-#     total_hours = total_minutes // 60
-#     minutes = total_minutes % 60
-
-#     # Format the difference as a time object
-#     formatted_difference = time(hour=int(total_hours), minute=int(minutes))
-
-#     # format_time1 = datetime.combine(datetime.min, time1)
-#     # format_time2 = datetime.combine(datetime.min, time2)
-#     # print('\n\n\n\n\n\n\n\ndatetime 2 ',format_time2 - format_time1)
-
-#     # total_minutes = (format_time2 - format_time1).total_seconds()//60
-
-
-#     # Convert seconds to hours and minutes
-#     # total_minutes = time_difference_seconds // 60
-
-#     # total_hours = total_minutes // 60
-#     # minutes = total_minutes % 60
-
-#     # formatted_difference = f"{int(total_hours)}:{int(minutes):02d}"
-#     # formatted_difference=datetime.strptime(formatted_difference,'%H:%M')
-#     return (formatted_difference)  
-
-
 def shiftypdate():
     employees = session_sqlite.query(Emp_login).all()  # Fetch all employees
-    
+
     for employee in employees:
         attendance_count = len(employee.attendances)
         print(f"Employee ID: {employee.id}, Attendance Count: {attendance_count}")
-        
+
         if attendance_count % 2 == 0:
             shifts = ['8G', '8A', '8C', '8B', 'GS', '12A', '12B', '10A', 'WO']
             current_shift_index = shifts.index(employee.shift)
             new_shift_index = (current_shift_index + 1) % len(shifts)
             employee.shift = shifts[new_shift_index]
             session_sqlite.commit()
-    
-    return len(employees)  
 
-# def attend_excel_data(file_path):
-#     print('Attending Excel Data')
-#     if os.path.exists(file_path):
-#         sheet_names = pd.ExcelFile(file_path).sheet_names
-
-#         for sheet_name in sheet_names:
-#             df = None
-#             if file_path.lower().endswith('.xlsx'):
-#                 df = pd.read_excel(file_path, sheet_name, engine='openpyxl')
-#             elif file_path.lower().endswith('.xls'):
-#                 df = pd.read_excel(file_path, sheet_name, engine='xlrd')
-#             else:
-#                 print("Unsupported file format")
-#                 return  # Handle unsupported format
-
-#             for index, row in df.iterrows():
-#                 empid = row['emp_id']
-#                 print("Processing: ", empid)
-
-                
-                
-#                 emp = session_sqlite.query(Emp_login).filter_by(emp_id=empid).first()
-#                 #print(emp)
-#                 shift_times = session_sqlite.query(Shift_time).all()
-#                 current_time = datetime.now().time()
-#                 current_date = datetime.now().date()
-#                 # = None
-#                 for shift in shift_times:
-#                         # shift_start_time = datetime.strptime(%H:%M:%S,'%H:%M:%S').time()
-#                         # shift_end_time = datetime.strptime(shift.shift_Outtime,'%H:%M:%S').time()
-#                         shift_start_time=shift.shiftIntime.strftime('%H:%M:%S')
-#                         shift_end_time=shift.shift_Outtime.strftime('%H:%M:%S')
-#                         if shift_start_time <= current_time <= shift_end_time:
-#                             current_shift = shift.shiftType
-#                             break
-#                 #print(current_shift,":current_shift")
-                
-#                 shift_type = emp.shift
-#                 #print("shift_type:",shift_type)
-#                 shitfTime = session_sqlite.query(Shift_time).filter_by(shiftType=emp.shift).first()
-#                 #print("shitfTime:",shitfTime)
-                
-#                 today_date = datetime.now().strftime("%d.%m.%Y")
-#                 #print("today_date",today_date)
-#                 is_holiday = session_sqlite.query(Festival).filter(Festival.date == today_date).first()
-#                 #print(is_holiday,"is_holiday")
-                
-#                 week_off = session_sqlite.query(Week_off).filter_by(emp_id=empid, date=today_date).order_by(Week_off.date.desc()).first()
-#                 print(week_off)
-#                 if is_holiday:
-#                     attendance_status = 'Holiday'
-#                 else:
-#                     if str(row['intime']) == "-":
-#                         leave_check = session_sqlite.query(leave).filter_by(emp_id=empid,date=today_date, status='Approved').first()
-#                         late_check = session_sqlite.query(late).filter_by(emp_id=empid,date=today_date, status='Approved').first()
-
-#                         if leave_check or late_check:
-#                             attendance_status = 'Leave'
-#                         elif week_off:
-#                             attendance_status='Week Off'
-#                         else:
-#                             if emp.branch=='FT':
-#                                 a=check_ft(today_date,empid)
-#                                 if a!=None:
-#                                     attendance_status=a
-#                                     print('\n\n\n\nattendance_status\n\n\n\n',attendance_status)
-#                             c_off=session_sqlite.query(comp_off).filter_by(emp_id=empid).first()
-#                             if c_off:
-#                                 attendance_status='C Off'
-#                                 session_sqlite.delete(c_off)
-#                                 session_sqlite.commit()
-#                             else:
-#                                 check_leave(today_date,empid)
-#                                 attendance_status = 'Absent'
-#                     else:
-#                         if current_shift != emp.shift:
-#                             attendance_status='Wrong Shift'
-#                         elif week_off:
-#                             attendance_status='Wop'
-#                             new_req=comp_off(emp_id=empid,date=today_date)                        
-#                             session_sqlite.add(new_req)
-#                             session_sqlite.commit()
-#                         else:
-#                             attendance_status = 'Present'   
-
-#                 branch=session_sqlite.query(Emp_login).filter_by(emp_id=empid).first().branch
-
-#                 intime=row['intime']
-#                 outtime=row['outtime']
-
-            
-#                 # print("attendance_status",attendance_status)
-#                 attendance = Attendance(
-#                     emp_id=empid,
-#                     name=emp.name,
-#                     inTime=intime,
-#                     outTime=outtime,
-#                     branch=branch,
-#                     shiftType=shift_type,
-#                     attendance=attendance_status,
-#                     shiftIntime=shitfTime.shiftIntime,
-#                     shift_Outtime=shitfTime.shift_Outtime,
-#                 )
-#                 session_sqlite.add(attendance)
-#                 update_freeze_status_and_remove_absences(empid)
-#         session_sqlite.commit()
-#     else:
-#         print("File not found")
+    return len(employees)
 
 def update_freeze_status_and_remove_absences(emp_id):
     try:
-        
+
         emp = session_sqlite.query(Emp_login).filter_by(emp_id=emp_id).first()
 
 
@@ -438,7 +210,7 @@ def update_freeze_status_and_remove_absences(emp_id):
         # print(f"Employee ID: {emp_id}")
         # print(f"Absent Records: {len(absent_records)}")
 
-        
+
         if len(absent_records) >= 30:
             emp.freezed_account = True
             # print("Updating freeze status...")
@@ -462,7 +234,7 @@ def delete_all_employees():
     except Exception as e:
         session_sqlite.rollback()
         print("An error occurred:", str(e))
-        
+
 def read_excel_data(file_path, sheet_name=None):
     if sheet_name:
         return pd.read_excel(file_path, sheet_name, engine='openpyxl')
@@ -497,7 +269,7 @@ def add_employee(file_path):
                 for index, row in df.iterrows():
                     emp_id = row['emp_id']
                     print("Processing: ", emp_id)
-                    
+
 
                     existing_emp = session_sqlite.query(Emp_login).filter_by(id=emp_id).first()
                     if not existing_emp:
@@ -514,7 +286,7 @@ def add_employee(file_path):
                         })
                     else:
                         print(f"Employee with ID {emp_id} already exists. Updating instead of inserting.")
-                        
+
                         # Update existing record if needed
                         existing_emp.name = row['name']
                         existing_emp.role = row['designation']
@@ -530,10 +302,10 @@ def add_employee(file_path):
                     session_sqlite.bulk_insert_mappings(Emp_login, data_to_insert)
                     session_sqlite.commit()
                 print("Data added successfully.")
-                
+
             else:
                 print("No new data to add.")
-            
+
             session_sqlite.commit()  # Commit the main transaction
         else:
             print("File not found")
@@ -554,13 +326,13 @@ def up_festival(file_path):
         with session_sqlite.begin_nested():
             # Delete all records from the Festival table
             session_sqlite.query(Festival).delete()
-        
-        
+
+
         # print('done 1')
         sheet_names = pd.ExcelFile(file_path).sheet_names
 
         # Use a context manager for database operations
-        
+
 
         # print('done 2')
 
@@ -601,7 +373,7 @@ def up_festival(file_path):
 
 def check_send_sms(emp_id):
     emp = session_sqlite.query(Emp_login).filter_by(emp_id=emp_id).first()
-    
+
     if emp:
         Phonenum = emp.phoneNumber
         email = emp.email
@@ -633,17 +405,17 @@ def month_attendance():
     # Create a dictionary to store attendance records for each emp_id
     employee_data = {}
     date = set()
-    
+
     for record in last_month_attendance:
         emp_id = record.emp_id
         record_date=record.date.date().day
         # print(str(record_date)[:10])
         date.add(record_date)
-        
+
         # If emp_id is not in t8e dictionary, create a new list for that emp_id
         if emp_id not in employee_data:
             employee_data[emp_id] = []
-        
+
         # Append the record to the list for that emp_id
         employee_data[emp_id].append(record)
 
@@ -676,23 +448,23 @@ def check_leave(date_str, emp_id):
 def createXL():
     try:
         saveFolder = current_app.config['DAY_ATTENDANCE_FOLDER']
-        
+
         # Connect to the SQLite database
         sqlite_file = 'app/database.db'
         conn = sqlite3.connect(sqlite_file)
-        
+
         # Read data from the 'call_duty' table
         call_duty_df = pd.read_sql_query("SELECT * FROM call_duty", conn)
-        
+
         # Read data from the 'Attendance' table
         attendance_df = pd.read_sql_query("SELECT * FROM Attendance", conn)
-        
+
         # Merge the dataframes with a left join to keep all rows from 'attendance_df'
         merged_df = pd.merge(attendance_df, call_duty_df, on='emp_id', how='left', suffixes=('_attendance', '_call_duty'))
-        
+
         # Save the merged dataframe to Excel
         merged_df.to_excel(os.path.join(saveFolder, "merged_data.xlsx"), index=False)
-        
+
         return True  # Return True if the file creation is successful
     except Exception as e:
         error_message = "Error creating Excel file: {}".format(str(e))
@@ -712,18 +484,7 @@ def calculate_time_difference(time1, time2):
 
     seconds1 = int(time1.hour) * 3600 + int(time1.minute) * 60
     seconds2 = int(time2.hour) * 3600 + int(time2.minute) * 60
-    # print('\n\n\n\n\n\nseconds1 :',seconds1)
-    # print('\n\n\n\n\n\nseconds2 :',seconds2)
 
-    # Calculate the difference in seconds
-    # if seconds1>seconds2:
-    #     difference_seconds = seconds1 - seconds2
-
-    # elif seconds2>seconds1:
-    #     difference_seconds = seconds2 - seconds1
-
-    # else:
-    #     difference_seconds=0
     difference_seconds = seconds2 - seconds1
     if '-' in str(difference_seconds):
         return None
@@ -733,16 +494,8 @@ def calculate_time_difference(time1, time2):
     total_hours = total_minutes // 60
     minutes = total_minutes % 60
 
-    # Format the difference as a time object
-    # time_difference = datetime.timedelta(hours=total_hours, minutes=minutes)
 
-    # print('\n\n\n\n\n\ntotal_hours :',total_hours)
-    # print('\n\n\n\n\n\nminutes :',minutes)
-    # Creating a datetime object with today's date and adding the time difference
-    # formatted_difference = datetime.combine(datetime.date.today(), datetime.time()) + time_difference
-    # time_difference = datetime.timedelta(hours=total_hours, minutes=minutes)
     time_difference=datetime(2024,1,1,total_hours,minutes,0)
-    # print('\n\n\n\n\n\n\n\n\n\n\n',time_difference.time())
 
     return time_difference.time()
 
@@ -750,22 +503,8 @@ def calculate_time_difference(time1, time2):
 
 
 def calculate_time_difference_total_timeduraction(time1, time2):
-    # time1 = datetime.strptime(time1_str, '%Y-%m-%d %H:%M:%S.%f')
-    # time2 = datetime.strptime(time2_str, '%Y-%m-%d %H:%M:%S.%f')
-
-    # Calculate the difference in datetime objects
     time_difference = time2 - time1
-    
-    
     return str(time_difference)
-
-
-
-
-
-
-
-
 
 def create_dummy_attendance():
         current_time_with_ms = datetime.now().time()
@@ -805,7 +544,7 @@ def create_dummy_attendance():
                         status=check_ft(datetime.now().date(),emp.emp_id)
                         if status!=None:
                             attendance_status=status
-                
+
                 atten=session_sqlite.query(Attendance).filter(Attendance.emp_id==emp.emp_id,func.date(Attendance.date)==datetime.now().date()).first()
                 # print('\n\n\n\n\n',atten,'\n\n\n\n')
 
@@ -828,7 +567,7 @@ def create_dummy_attendance():
                             session_sqlite.commit()
                 else:
                             print('\n\n\n\n\n\n',atten)
-            
+
 
 
 def check_holiday(curr_date):
@@ -856,18 +595,14 @@ def check_shift(shiftIntime,shiftOuttime):
 
     return shiftIntime,shiftOuttime
 
-
-
-
-
 def fetch_and_store_data():
-    
+
     try:
             current_date = datetime.now().date()
             session_mysql = SessionMySQL()
             yesterday_date=current_date - timedelta(days=1)
             # print('\n\n\n\nyesterday date da',yesterday_date)
-            
+
 
             mysql_data = session_mysql.query(MySQLAttendance).filter(
                 (func.date(MySQLAttendance.time) == current_date)
@@ -876,15 +611,10 @@ def fetch_and_store_data():
             # print(mysql_data)
 
             for record in mysql_data:
-
-                # emp=session_sqlite.query(Emp_login).filter_by(emp_id=emp_id).first()
-                # if emp.freezed_account==1:
-                #     emp.freezed_account==0
-                #     session_sqlite.commit()
                 try:
                     existing_record = session_sqlite.query(Attendance).filter(
                         and_(Attendance.emp_id == record.emp_id, func.date(Attendance.date) == current_date)
-                    ).first() 
+                    ).first()
 
                     yesterday_atten=session_sqlite.query(Attendance).filter(
                         and_(Attendance.emp_id == record.emp_id, func.date(Attendance.date) == yesterday_date,Attendance.inTime!=None ,or_(
@@ -895,20 +625,18 @@ def fetch_and_store_data():
                     current_shifts=get_current_shift()
                     if yesterday_atten:
                         if yesterday_atten.outTime!=record.time:
-                            print(yesterday_atten , '\n\n\n\n\n')
                             yesterday_atten.outTime=record.time
                             session_sqlite.commit()
-                            print('\n\n\n\n\n\n\n\n ulla podhu 1 ',yesterday_atten.id)
                             calculate_Attendance_from_db(yesterday_atten.id)
-                        
+
                     elif not existing_record:
-        
+
                         # shiftTime = session_sqlite.query(Shift_time).filter_by(shiftType=emp.shift).first()
-                        
+
                         emp_id=record.emp_id
                         # shift_times = session_sqlite.query(Shift_time).all()
                         # current_time = datetime.now().time()
-                        
+
                         week_off = session_sqlite.query(Week_off).filter_by(emp_id=emp_id, date=str(datetime.now().date())).first()
                         shift_for_emp=session_sqlite.query(Shift_time).filter_by(shiftType=emp.shift).first()
 
@@ -933,9 +661,9 @@ def fetch_and_store_data():
 
                         emp_shift=session_sqlite.query(Emp_login).filter_by(emp_id=emp_id).first().shift
                         shift_time=session_sqlite.query(Shift_time).filter_by(shiftType=emp_shift).first()
-                        
+
                         shiftIntime,shift_Outtime=check_shift(shift_time.shiftIntime,shift_time.shift_Outtime)
-                            
+
 
                         sqlite_record = Attendance(
                                         emp_id=record.emp_id,
@@ -953,7 +681,7 @@ def fetch_and_store_data():
                         inserted_id = sqlite_record.id
                         print('\n\n\n\n\n\n\n\n ulla podhu 2 ',inserted_id)
                         calculate_Attendance_from_db(inserted_id)
-                        
+
                     else:
                         if existing_record.inTime==None:
                             existing_record.inTime=record.time
@@ -986,7 +714,7 @@ def fetch_and_store_data():
 
     except Exception as e:
             print("Exception:/n/n", e)
-    
+
     return redirect('/')
 
 def calculate_Attendance_from_db(id):
@@ -1017,7 +745,7 @@ def calculate_Attendance_from_db(id):
                 attendance.earlyGoingBy = calculate_time_difference(outTime, attendance.shift_Outtime)
                 time_worked = calculate_time_difference_total_timeduraction(inTime, outTime)
                 attendance.TotalDuration = time_worked
-                
+
                 overtime_hours = calculate_time_difference(attendance.shift_Outtime, outTime)
                 attendance.overtime = overtime_hours
             else:
@@ -1062,18 +790,18 @@ def check_ft(today_date, emp_id):
                 elif four_before_attend.attendance=='Rest':
                     return 'Week Off'
             three_before_attend=session_sqlite.query(Attendance).filter_by(emp_id=emp_id,date=three_before_date).first()
-            if three_before_attend and (three_before_attend.attendance=='Present' or three_before_attend.attendance=='Half day'):    
+            if three_before_attend and (three_before_attend.attendance=='Present' or three_before_attend.attendance=='Half day'):
                 four_before_attend=session_sqlite.query(Attendance).filter_by(emp_id=emp_id,date=four_before_date).first()
                 if four_before_attend.attendance and four_before_attend.attendance=='Week Off':
                     return 'Rest'
                 elif four_before_attend.attendance=='Rest':
                     return 'Week Off'
-                
+
     print('eng dhan problem')
     return None
-        
-    
-    
+
+
+
 
 def get_current_shift():
     now = datetime.now().time()
@@ -1085,7 +813,7 @@ def get_current_shift():
     for shift in shift_times:
         start=shift.shiftIntime
         end=shift.shift_Outtime
-        
+
         if start < end:
             if start <= now < end:
                 print(start , '<', now , '<', end)
@@ -1096,7 +824,7 @@ def get_current_shift():
                 shifts.append(shift.shiftType)
     print(shifts,'\n\n\n\n\n\n')
     return shifts
-            
+
 
 def out_time_reminder_email():
     todaydate = datetime.now().date()
