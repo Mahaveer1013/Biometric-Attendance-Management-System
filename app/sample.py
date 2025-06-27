@@ -24,7 +24,7 @@ def check_date_format(date):
             # Extract the time if available
             # Format the date in the desired format (DD-MM-YYYY hr:min:sec)
             return formatted_date
-    
+
     # If none of the patterns match, return None
     return None
 

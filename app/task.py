@@ -2,6 +2,7 @@ from celery import Celery
 from datetime import datetime
 from twilio.rest import Client
 from twilio.base.exceptions import TwilioRestException
+import os
 
 
 celery = Celery('tasks', broker='redis://localhost:6379/0')
@@ -20,4 +21,3 @@ def newvalidate_and_format_phone_number(phone_number):
 @celery.task
 def send_alter(numbers_to_message, message_body):
     print("Sending SMS for late out time at", datetime.now())
-

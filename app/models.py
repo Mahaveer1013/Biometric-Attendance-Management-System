@@ -18,42 +18,40 @@ class Login_admin(db.Model, UserMixin):
 
 class Emp_login(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
+    emp_id = db.Column(db.String(32), unique=True, nullable=False)  # Standardize as string, unique
     date = db.Column(db.DateTime(timezone=True), default=current_time)
     email = db.Column(db.String(150))
     name = db.Column(db.String(150), nullable=False)
     password = db.Column(db.String(150))
-    emp_id = db.Column(db.Integer)
-    branch=db.Column(db.String(150),default='KKL')  # DR, FT, KKL
-    phoneNumber=db.Column(db.Integer)   #newly added
+    branch=db.Column(db.String(150),default='KKL')
+    phoneNumber=db.Column(db.String(20))   # Always string
     role =db.Column(db.String(150), nullable=False)
     late_balance = db.Column(db.Integer, default=20)
     leave_balance = db.Column(db.Integer, default=20)
     address = db.Column(db.String(150))
     gender = db.Column(db.String(150))
     shift=db.Column(db.String(150))
-    attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan')
-    freezed_account =db.Column(db.Boolean(150),default=False)
+    attendances = db.relationship('Attendance', back_populates='employee', cascade='all, delete-orphan', primaryjoin="Emp_login.emp_id==Attendance.emp_id")
+    freezed_account =db.Column(db.Boolean,default=False)
 
 
 class Attendance(db.Model,UserMixin):
     id=db.Column(db.Integer,primary_key=True)
     date = db.Column(db.DateTime(timezone=True), default=current_time)
-    emp_id = db.Column(db.Integer, db.ForeignKey('emp_login.emp_id'))
+    emp_id = db.Column(db.String(32), db.ForeignKey('emp_login.emp_id'))  # FK to emp_id, string
     name = db.Column(db.String(150))
     attendance =db.Column(db.String(150))
     branch =db.Column(db.String(150),default='KKL')
-    # wages_per_Day=db.Column(db.String(150))
     inTime=db.Column(db.DateTime(timezone=True))
     outTime=db.Column(db.DateTime(timezone=True))
     overtime=db.Column(db.Time(timezone=True))
-    employee = db.relationship('Emp_login', back_populates='attendances')
+    employee = db.relationship('Emp_login', back_populates='attendances', primaryjoin="Attendance.emp_id==Emp_login.emp_id")
     shiftType=db.Column(db.String(150))
     shiftIntime = db.Column(db.DateTime(timezone=True))
     shift_Outtime = db.Column(db.DateTime(timezone=True))
     TotalDuration=db.Column(db.String(150))
     lateBy=db.Column(db.Time(timezone=True))
     earlyGoingBy=db.Column(db.Time(timezone=True))
-    # punchRecords=db.Column(db.String(150))
 
 
 

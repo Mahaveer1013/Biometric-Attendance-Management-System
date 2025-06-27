@@ -85,10 +85,6 @@
       <li>
             <a href="/del_atten" class="tag-btn">Del attendance</a>
       </li>
-      <li>
-            <a href="/start" class="tag-btn">start</a>
-      </li>
-
 
       <select name="shift" id="shift" class="tag-btn click shift_change">
         <option value="current">Select Shift Name</option>
@@ -99,7 +95,7 @@
       </select>
     </ul>
   </menu>
-      
+
   <section
     class="frame today-attendance"
     style="display: flex"
@@ -166,12 +162,12 @@
               {% else %}
                 <td class="shiftInTime">{{attendance.inTime}}
               {% endif %}
-              
+
               {% if attendance.outTime|string =='0001-01-01 00:00:00' and
               attendance.inTime!=None%}
               <td class="outtime">Miss Punch</td>
 
-            
+
             {% elif attendance.outTime ==None and
               attendance.inTime!=None%}
 
@@ -242,7 +238,7 @@
                         <option value="half-day">Half Day</option>
                         <option value="Present">Present</option>
                       </select>
-                
+
                 {% else %}
                 <i class="fas fa-times-circle"></i> Absent {% endif %}
               </td>
@@ -382,7 +378,7 @@
                 <th>Email</th>
                 <th>Address</th>
                 <th>Status</th>
-                
+
               </tr>
             </thead>
             <tbody class="tableBody">
@@ -398,7 +394,7 @@
                 <td>{{emp.late_balance}}</td>
                 <td>{{emp.phoneNumber}}</td>
                 <td>{{emp.email}}</td>
-                
+
                 <td>
                   789 Maple Lane Apt 10B, Building C Suburbia City, District
                   67890 Territory State Countryland 54321
@@ -554,7 +550,7 @@
                 <td>{{emp.shift}}</td>
                 <td>{{emp.phoneNumber}}</td>
                 <td>{{emp.email}}</td>
-                
+
                 <td>
                   789 Maple Lane Apt 10B, Building C Suburbia City, District
                   67890 Territory State Countryland 54321
@@ -668,7 +664,7 @@
                 <option value="yesterday employee">Yesterday Employee</option>
                 <option value="yesterday attendance">Yesterday Attendance</option>
             </select> -->
-        
+
               <div class="frame-options">
                 <button type="button" class="downloadImage">
                   <i class="fas fa-file-download"></i>
@@ -682,7 +678,7 @@
                 </div>
                 <div class="chart_details">
                   <ul class="details">
-                    
+
                   </ul>
                 </div>
              </div>

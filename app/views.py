@@ -30,8 +30,8 @@ from flask_socketio import emit
 from app import socketio
 @views.route('/',methods=['POST','GET'])
 @login_required
-def admin():    
-    print(current_user.role) 
+def admin():
+    print(current_user.role)
     if current_user.role == 'employee':
         return redirect(url_for('auth.logout'))
     else :
@@ -51,14 +51,14 @@ def admin():
         create_dummy_attendance()
         # Combine the lists, placing the freezed_account=1 records at the end1
         emp_login_sorted = emp_login_active + emp_login_freezed
-        
+
         month_attend=month_attendance()
         employee_data=month_attend[0]
         date=month_attend[1]
         backup=Backup.query.all()
         # create_dummy_attendance()
         print('curre\n\n\n',current_shifts)
-        
+
         flash('Logged In Successfully','success')
 
     return render_template('admin.html',current_shifts=current_shifts,employee_data=employee_data,backup=backup,date=date,emp_login=emp_login, notification=notification, attendance=employee_attendance, late_permission=late_permission, leave_permission=leave_permission,emp_login_sorted=emp_login_sorted)
@@ -99,24 +99,24 @@ def admin():
 
 #         # Redirect the user _to the 'admin' page or route.
 #     return redirect(url_for('views.admin'))
-    
-        
+
+
 # @views.route('/delete-emp',methods=['POST'])
 # @login_required
 # def delete_employee():
 #     try:
 #         data = request.get_json()
 #         print(data)
-        
+
 #         if not data or 'EmpId' not in data:
 #             return jsonify({'error': 'Invalid request data. EmpId is missing.'}), 400
 
 #         emp_id = data['EmpId']
-        
+
 
 #         # Check if an employee with the given emp_id exists in the database
 #         employee = Emp_login.query.filter_by(id=int(emp_id)).first()
-        
+
 #         attendance=Attendance.query.filter_by(id=int(emp_id)).all()
 #         for record in attendance:
 #             db.session.delete(record)
@@ -126,7 +126,7 @@ def admin():
 
 #         # If the employee is found, delete the record from the database
 #         db.session.delete(employee)
-        
+
 #         db.session.commit()
 
 #         return jsonify({'message': 'Employee deleted successfully.'}), 200
@@ -135,17 +135,17 @@ def admin():
 #         print(str(e))
 #         return jsonify({'error': str(e)}), 500
 
-    
 
-    
+
+
 # @views.route('/profile-view')
 # @login_required
 # def profileView():
-#     try: 
-        
+#     try:
+
 #         employee =Emp_login.query.order_by(Emp_login.id)
-        
-        
+
+
 #     except Exception as error:
 #         flash(error)
 #     current_date = datetime.now().date()
@@ -162,8 +162,8 @@ def admin():
 #     # db.session.commit()
 #     # print(lol.shift_Outtime)
 #     attendance=Attendance.query.all()
-    
-#     return redirect('/')  
+
+#     return redirect('/')
 
 # @views.route('/getshift',methods=['POST','GET'])
 # def get_shift():
@@ -178,9 +178,9 @@ def admin():
 #     except Exception as e:
 #         print("Error occurred:", e)
 #         db.session.rollback()  # Rollback in case of error
-    
+
 #     return redirect(url_for('views.viewShift'))  # Redirect to viewShift after processing
-    
+
 #  new_shift = Shift_time(shiftIntime="06:00",shift_Outtime="14:00",shiftType="8A",work_Duration="08:00")
 #     db.session.add(new_shift)
 #     db.session.commit()
@@ -191,7 +191,7 @@ def admin():
 
 # @views.route('/shift')
 # def viewShift():
-#     records=Shift_time.query.order_by(Shift_time.id)  
+#     records=Shift_time.query.order_by(Shift_time.id)
 #     return render_template('shift.html',records=records)
 
 # @views.route('/attendance')
@@ -199,16 +199,16 @@ def admin():
 #     try:
 #             file_path = os.path.join(app.config['EXCEL_FOLDER'], 'attendance.xlsx')  # Use correct case 'EXCEL_FOLDER'
 #             attend_excel_data(file_path)  # Call the data processing function
-       
+
 
 #     except Exception as e:
 #         print("Error occurred:", e)
-#         db.session.rollback()  # Rollback in case of error    
+#         db.session.rollback()  # Rollback in case of error
 #     return redirect(url_for('views.calculate'))
 
 # @views.route('/backup', methods=['POST', 'GET'])
 # def backup_data():
-            
+
 
 #     # Retrieve all records from the Attendance table
 #     attendance_records = Attendance.query.all()
@@ -252,7 +252,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    print('Client disconnected')    
+    print('Client disconnected')
 
 @socketio.on('late')
 @login_required
@@ -260,7 +260,7 @@ def handle_lateform_callback(lateDet):
     print('\n\nlate socket triggered\n\n\n')
     emp_id=current_user.emp_id
     # emp_name=session.get('name')
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     emp_name=emp.name
     reason=lateDet['reason']
     from_time=lateDet['from_time']
@@ -275,7 +275,7 @@ def handle_lateform_callback(lateDet):
         db.session.commit()
         print("new request : ",new_request.from_time)
         id = new_request.id
-        
+
         recently_added_row = late.query.order_by(desc(late.id)).first()
         new_request=notifications(emp_id=emp_id,reason=reason,emp_name=emp_name,permission_type='Late',from_time=from_time,to_time=to_time,req_id=recently_added_row.id)
         db.session.add(new_request)
@@ -303,7 +303,7 @@ def handle_leaveform_callback(leaveDet):
     print('\n\n\nleave came\n\n\n')
     emp_id=current_user.emp_id
     # emp_name=session.get('name')
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     emp_name=emp.name
     reason=leaveDet['reason']
     from_time=leaveDet['from_time']
@@ -313,7 +313,7 @@ def handle_leaveform_callback(leaveDet):
     hr_approval='Pending'
 
 
-    
+
     try:
         new_request=leave(emp_id=emp_id,emp_name=emp_name,reason=reason,from_time=from_time,to_time=to_time,approved_by=approved_by,status=status,hr_approval=hr_approval)
         db.session.add(new_request)
@@ -325,7 +325,7 @@ def handle_leaveform_callback(leaveDet):
         db.session.add(new_request)
         db.session.commit()
         date=recently_added_row.date
-        
+
         all_leaveData={'id':id,'date':str(date),'emp_id':emp_id,'emp_name':emp_name,'reason':reason,'from_time':from_time,'to_time':to_time,'approved_by':approved_by,'status':status,'hr_approval':hr_approval}
         print(all_leaveData)
         flash('New notification','success')
@@ -377,30 +377,30 @@ def user_dashboard():
 
             elif emp.attendance=='Wrong Shift':
                 attendance_details['wrong_shift']+=1
-            
+
             elif emp.attendance=='Leave':
                 attendance_details['communicated']+=1
-            
+
             elif emp.attendance=='Week Off':
                 attendance_details['week_off']+=1
-            
+
             elif emp.attendance=='C Off':
                 attendance_details['c_off']+=1
 
             elif emp.attendance=='Wop':
                 attendance_details['wop']+=1
-            
+
             else:
                 attendance_details['present']+=1
         print(attendance_details)
 
         late_det=False
         leave_det=False
-        
+
         late_det=late.query.filter_by(emp_id=emp_id).all()
         leave_det=leave.query.filter_by(emp_id=emp_id).all()
         # all_permission = late.query.filter(late.date).union(leave.query.filter(leave.date)).order_by(text('date')).all()
-        flash('Logged In Successfully','success')        
+        flash('Logged In Successfully','success')
     return render_template("emp_dashboard.html",user=user,date=date,attendance_details=attendance_details,late=late_det,leave=leave_det)
 
 @views.route("/attendance_upload",methods=['POST','GET'])
@@ -441,7 +441,7 @@ def late_approve():
         'userId': emp_id,
         'hr_approval': user.hr_approval
     }
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         user.late_balance -= 1
         email=user.email
@@ -449,7 +449,7 @@ def late_approve():
         db.session.commit()
     else:
         print(f"Employee with emp_id {emp_id} not found.")
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         try:
@@ -460,7 +460,7 @@ def late_approve():
             print("Mail Not Sent")
 
         try:
-            user=Emp_login.query.filter_by(emp_id=emp_id).first()
+            user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
             phone=user.phoneNumber
             phone="+91 "+str(phone)
             print(type(phone))
@@ -482,21 +482,21 @@ def late_decline():
     user.approved_by=admin_name
     db.session.commit()
     emp_id=user.emp_id
-    
+
     # Create a JSON response
     response_data = {
         'approved_by':user.approved_by,
         'userId': emp_id,
         'hr_approval': user.hr_approval
     }
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         late_balance=user.late_balance
         db.session.commit()
     else:
         print(f"Employee with emp_id {emp_id} not found.")
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         try:
@@ -507,7 +507,7 @@ def late_decline():
             print("Mail Not Sent")
 
         try:
-            user=Emp_login.query.filter_by(emp_id=emp_id).first()
+            user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
             phone=user.phoneNumber
             phone="+91 "+ str(phone)
             print(type(phone))
@@ -526,7 +526,7 @@ def leave_approve():
     user = leave.query.filter_by(id=id).first()
     print(" USER : ",user)
     admin_name=current_user.name
-    
+
     user.status='Approved'
     user.hr_approval='Approved'
     user.approved_by=admin_name
@@ -537,7 +537,7 @@ def leave_approve():
         'userId': emp_id,
         'hr_approval': user.hr_approval
     }
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         user.leave_balance -= 1
         email=user.email
@@ -545,7 +545,7 @@ def leave_approve():
         db.session.commit()
     else:
         print(f"Employee with emp_id {emp_id} not found.")
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         try:
@@ -556,7 +556,7 @@ def leave_approve():
             print("Mail Not Sent")
 
         try:
-            user=Emp_login.query.filter_by(emp_id=emp_id).first()
+            user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
             phone=user.phoneNumber
             phone="+91"+phone
             print(type(phone))
@@ -586,14 +586,14 @@ def leave_decline():
         'userId': emp_id,
         'hr_approval': user.hr_approval
     }
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         leave_balance=user.leave_balance
         db.session.commit()
     else:
         print(f"Employee with emp_id {emp_id} not found.")
-    user=Emp_login.query.filter_by(emp_id=emp_id).first()
+    user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if user:
         email=user.email
         try:
@@ -604,7 +604,7 @@ def leave_decline():
             print("Mail Not Sent")
 
         try:
-            user=Emp_login.query.filter_by(emp_id=emp_id).first()
+            user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
             phone=user.phoneNumber
             phone="+91"+phone
             print(type(phone))
@@ -701,7 +701,7 @@ def upload_select():
             #         return redirect(url_for('views.calculate'))
             #     except:
             #         flash('Oops! Something Went wrong.','error')
-            
+
             if file_type == 'addEmployee':
                 filename = secure_filename(file.filename)
                 # print(filename)
@@ -709,12 +709,12 @@ def upload_select():
                 file.save(file_path)
                 add_employee(file_path)
                 return redirect(url_for('views.admin'))
-            
+
             elif file_type == 'shift':
                 filename = secure_filename(file.filename)
                 # print(filename)
                 try:
-                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER
+                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER'
                     # print('nuubyv')
                     file.save(file_path)
                     process_excel_data(file_path)  # Call the data processing function
@@ -723,13 +723,13 @@ def upload_select():
                 except Exception as e:
                     print("Error type:", type(e).__name__)
                     print("Error message:", str(e))
-                    db.session.rollback() 
+                    db.session.rollback()
 
             elif file_type=='festival':
                 filename = secure_filename(file.filename)
                 print(filename,'\n\n\n\nfilename')
                 try:
-                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER
+                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER'
                     # print('nuubyv')
                     file.save(file_path)
                     up_festival(file_path)  # Call the data processing function
@@ -744,7 +744,7 @@ def upload_select():
                 filename = secure_filename(file.filename)
                 # print(filename)
                 try:
-                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER
+                    file_path = os.path.join(app.config['EXCEL_FOLDER'], str(filename))  # Use correct case 'EXCEL_FOLDER'
                     # print('nuubyv')
                     file.save(file_path)
                     read_weekoff(file_path)  # Call the data processing function
@@ -753,7 +753,7 @@ def upload_select():
                 except Exception as e:
                     print("Error type:", type(e).__name__)
                     print("Error message:", str(e))
-                   
+
         else :
             return 'No file uploaded'
 
@@ -764,7 +764,7 @@ def del_single_emp():
     if current_user.role == 'employee':
         return redirect(url_for('auth.logout'))
     emp_id=request.form.get('empid')
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     atten_emp=Attendance.query.filter_by(emp_id=emp_id).all()
     notify= notifications.query.filter_by(emp_id=emp_id).all()
     for notify in notify:
@@ -796,7 +796,7 @@ def del_single_emp():
             shift=emp.shift,
             worked=atten_emp_count
         )
-        db.session.add(backup_entry) 
+        db.session.add(backup_entry)
         db.session.delete(emp)
         db.session.commit()
         print(f"Row with emp_id {emp_id} deleted successfully.")
@@ -812,9 +812,9 @@ def del_multiple_emp():
         return redirect(url_for('auth.logout'))
     selected_employee_ids = request.form.getlist('select')
     print("\n\n\n\n\n\n\n\n\n",selected_employee_ids)
-    
+
     for emplo in selected_employee_ids:
-        emp=Emp_login.query.filter_by(emp_id=emplo).first()
+        emp=Emp_login.query.filter_by(emp_id=str(emplo)).first()
         atten_emp=Attendance.query.filter_by(emp_id=emplo).all()
         atten_emp_count = Attendance.query.filter((Attendance.emp_id == emplo) & ((Attendance.attendance == "Present") | (Attendance.attendance == "Half day"))).count()
         if emp:
@@ -832,7 +832,7 @@ def del_multiple_emp():
             for user in users:
                 db.session.delete(user)
             db.session.commit()
-            
+
             backup_entry = Backup(
                 date=datetime.now(),
                 email=emp.email,
@@ -846,14 +846,14 @@ def del_multiple_emp():
                 gender=emp.gender,
                 shift=emp.shift,
                 worked=atten_emp_count
-                
+
             )
-            db.session.add(backup_entry) 
+            db.session.add(backup_entry)
             db.session.delete(emp)
             db.session.commit()
     # for i in selected_employee_ids:
     #     emp=Emp_login.query.filter_by(emp_id=i).first()
-    #     if emp: 
+    #     if emp:
     #         db.session.delete(emp)
     #         db.session.commit()
     #         flash('Employees Deleted Succesfully','success')
@@ -862,8 +862,8 @@ def del_multiple_emp():
     #         flash('Employees Not Deleted','error')
     #         print(f"Row with emp_id {i} not found.")
     # employees_deleted = Emp_login.query.filter(Emp_login.emp_id.in_(selected_employee_ids)).delete(synchronize_session=False)
-    
-    
+
+
     # if employees_deleted:
     #     db.session.commit()
             flash('Employees Deleted Successfully', 'success')
@@ -879,7 +879,7 @@ def edit_employee():
     emp_id=request.form.get('empid')
     emp_type=request.form.get('editType')
     value=request.form.get('new_value')
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     attenName=Attendance.query.filter_by(emp_id=emp_id).all()
     if emp and attenName:
         if emp_type != value:
@@ -905,7 +905,7 @@ def handle_user_editform_callback():
         new_req=None
         emp_id=current_user.emp_id
         print(emp_id)
-        user=Emp_login.query.filter_by(emp_id=emp_id).first()
+        user=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
         name = user.name
         newdata = data.get('new')
         data_type = data.get('type')
@@ -923,7 +923,7 @@ def handle_user_editform_callback():
         result={'status':False,'message':'Message Not Sent'}
 
     return jsonify(result)
-    
+
 
 @views.route('/user_edit_data',methods=['POST'])
 @login_required
@@ -948,7 +948,7 @@ def handle_user_editform():
     except Exception as e:
         # Handle exceptions appropriately
         return jsonify({'success': False, 'error': str(e)})
-    
+
 @views.route('/accept_edit',methods=['POST'])
 @login_required
 def accept_edit():
@@ -966,7 +966,7 @@ def accept_edit():
             atten.name=new_data
             db.session.commit()
 
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     # old_value=getattr(emp,data_type)
     if data_type=='password':
         setattr(emp,data_type,new_data)
@@ -981,7 +981,7 @@ def accept_edit():
         except:
             print('eror here at 972')
     db.session.commit()
-        
+
     leave_table=leave.query.filter_by(emp_id=emp_id).first()
     if leave_table:
         try:
@@ -989,7 +989,7 @@ def accept_edit():
         except:
             print('eror here at 972')
     db.session.commit()
-    
+
     user=user_edit.query.filter_by(id=id).first()
     db.session.delete(user)
     db.session.commit()
@@ -1008,10 +1008,10 @@ def decline_edit():
 # def send_message():
     # data = request.json
     # id = data.get('id')
-    
+
     # # Assuming Emp_login is a SQLAlchemy model
     # emp = Emp_login.query.filter_by(emp_id=id).first()
-    
+
     # if emp:
     #     Phonenum = emp.phoneNumber
     #     email = emp.email
@@ -1024,7 +1024,7 @@ def decline_edit():
     #     print("Phone number:", Phonenum)
     #     #send_mail(email=email, body=message,subject=sub)
     #     send_sms(Phonenum ,message)
-        
+
     #     # Send a JSON response
     #     return jsonify({"data": "Message sent"})
     # else:
@@ -1038,7 +1038,7 @@ def fetch_emp_details():
     form_data = request.form
     emp_id=form_data['empid']
     editType=form_data['editType']
-    value=Emp_login.query.filter_by(emp_id=emp_id).first()
+    value=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
 
     print(form_data)
 
@@ -1056,18 +1056,18 @@ def send_message_data():
         lastShift_db =Shift_time.query.filter_by(shiftType=lastShift).first()
         session['lastShift']=lastShift_db.shift_Outtime
         current_date = datetime.now().strftime('%Y-%m-%d')
-        
+
         # Assuming 'shift' is an attribute of the Attendance model
         last_shift_db = db.session.query(Attendance).filter(
             func.DATE(Attendance.date) == current_date,
             Attendance.shiftType == lastShift
         ).all()
-        
+
         if last_shift_db:
             for record in last_shift_db:
                 if record.outTime == None:
                     check_send_sms(record.emp_id)
-                    
+
     except Exception as e:
         print(e)
     return jsonify('received')
@@ -1099,7 +1099,7 @@ def send_message_data():
 #         db.session.commit()
 #     else:
 #         print("week_off for ,",id," on ",next_day," is exist")
-        
+
 #         # Send a JSON response
 #     return jsonify({"data": "Message sent"})
 
@@ -1109,21 +1109,21 @@ def send_message_data():
 def send_message():
     data = request.json
     id = data.get('id')
-    
+
     # Assuming Emp_login is a SQLAlchemy model
-    emp = Emp_login.query.filter_by(emp_id=id).first()
+    emp = Emp_login.query.filter_by(emp_id=str(id)).first()
     current_date = datetime.now().strftime('%Y-%m-%d')
     message="message"
 
     attendance = Attendance.query.filter(func.DATE(Attendance.date) == current_date,Attendance.emp_id==id).first()
-    
+
     if attendance.attendance=='Absent':
         message = f"""
         Dear {emp.name}:
         It is a gentle reminder to you,
-        You have Taken Leave today  (Date: {current_date}). 
+        You have Taken Leave today  (Date: {current_date}).
         """
-        
+
     if attendance.attendance=='O.T':
         message = f"""
         Dear {emp.name}:
@@ -1132,7 +1132,7 @@ def send_message():
         """
         attendance.attendance='Present'
     db.session.commit()
-    
+
     if emp:
         Phonenum = emp.phoneNumber
         email = emp.email
@@ -1145,7 +1145,7 @@ def send_message():
         print("Phone number:", Phonenum)
         #send_mail(email=email, body=message,subject=sub)
         send_sms(Phonenum ,message)
-        
+
         # Send a JSON response
         return jsonify({"data": "Message sent"})
     else:
@@ -1183,7 +1183,7 @@ def send_continue_message():
         db.session.commit()
     else:
         print("week_off for ,",id," on ",next_day," is exist")
-        
+
         # Send a JSON response
     return jsonify({"data": "Message sent"})
 
@@ -1196,7 +1196,7 @@ def bring_req_profile():
     permission_type = data.get('permission_type')
     print('views 1249',req_id)
     table=[]
-    
+
     print('permission_type ',permission_type)
     if permission_type=='late':
         table=late.query.filter_by(id=req_id).first()
@@ -1286,7 +1286,7 @@ def save_attendance():
             # punch_out_reminder(emp_id)
             db.session.commit()
         elif punchOut=='shift-continue':
-            new_req=comp_off(emp_id=emp_id,date=date)                        
+            new_req=comp_off(emp_id=emp_id,date=date)
             db.session.add(new_req)
             db.session.commit()
 
@@ -1358,7 +1358,7 @@ def get_chart():
 #     scheduler.add_job(out_time_reminder_email, trigger='cron', hour='6', minute='10')
 #     scheduler.add_job(out_time_reminder_email, trigger='cron', hour='14', minute='10')
 #     scheduler.add_job(out_time_reminder_email, trigger='cron', hour='22', minute='10')
-    
+
 #     scheduler.add_job(out_time_reminder_message, trigger='cron', hour='6', minute='10')
 #     scheduler.add_job(out_time_reminder_message, trigger='cron', hour='14', minute='10')
 #     scheduler.add_job(out_time_reminder_message, trigger='cron', hour='22', minute='10')
@@ -1371,15 +1371,13 @@ def get_chart():
 def start():
     scheduler = BackgroundScheduler()
     shifts=Shift_time.query.all()
-    print("\n\n\n\n\n\n\n\n\n\n\n\n",shifts)
     scheduler.add_job(fetch_and_store_data, trigger='interval', seconds=10)
     # scheduler.add_job(create_dummy_attendance, trigger='interval', seconds=10)
     for shift in shifts:
         shift_time = shift.shiftIntime
         hour = shift_time.hour
-        print("\n\n\n\n\n\n\n\n\n\n",hour)
         scheduler.add_job(call_fun, trigger='cron', hour=hour, minute='15')
-        
+
     scheduler.start()
     return redirect('/')
 
@@ -1394,7 +1392,7 @@ def createFile():
         return redirect(url_for('views.downloadXL'))
     else:
         return "Error creating Excel file"
-    
+
 
 @views.route('/downloadXL', methods=['GET', 'POST'])
 @login_required
@@ -1418,10 +1416,10 @@ def unfreeze():
     data=request.json
     emp_id=data.get('emp_id')
     print(emp_id)
-    
+
     # atten=Attendance.query.filter_by(emp_id=emp_id).first()
     # print(atten.emp_id.freezed_account,'\n\n\n')
-    emp=Emp_login.query.filter_by(emp_id=emp_id).first()
+    emp=Emp_login.query.filter_by(emp_id=str(emp_id)).first()
     if emp:
         if emp.freezed_account==True:
             emp.freezed_account=False
@@ -1435,7 +1433,3 @@ def unfreeze():
     else:
         flash('Employee Not exists')
         return jsonify("Employee Not exists",emp_id)
-
-
-
-    
